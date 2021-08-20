@@ -3,7 +3,7 @@ import styled from "styled-components";
 import tw from "twin.macro";
 
 const Container = styled.div`
-  ${tw`bg-blue-100`}
+  ${tw`bg-gray-800 text-blue-100`}
   height: 100%;
   width: 100%;
   overflow: auto;
@@ -13,41 +13,83 @@ const Content = styled.main`
   ${tw`m-2 p-8`}
 `;
 
-const Header = styled.h1`
-  ${tw`font-bold text-6xl`}
+const CitatContainer = styled.table`
+  ${tw``}
 `;
 
-const StyledLink = styled.a`
-  ${tw`text-xl`}
+const CitatItem = styled.tr`
+  ${tw`odd:bg-gray-700`}
 `;
 
-export default function Home() {
+const CitatContent = styled.td`
+  ${tw`p-2`}
+`;
+
+const CitatHeader = styled.th`
+  ${tw`odd:text-left`}
+`;
+
+export default function Home({ citater }) {
+  const c = citater.map((c) => (
+    <CitatItem key={c._id}>
+      <CitatContent>{c.name}</CitatContent>
+      <CitatContent>{c.citat}</CitatContent>
+    </CitatItem>
+  ));
   return (
     <Container>
       <Head>
-        <title>Next JS with Tailwind and Styled-Components</title>
+        <title>DTU Eliten Citat Side</title>
       </Head>
 
       <Content>
-        <Header>
-          This is a basic Next JS site with Styled-Component and Tailwind CSS
-        </Header>
-        <ul>
-          <li>
-            <StyledLink href="https://styled-components.com/">
-              Styled-Components
-            </StyledLink>
-          </li>
-          <li>
-            <StyledLink href="https://tailwindcss.com/">TailwindCSS</StyledLink>
-          </li>
-          <li>
-            <StyledLink href="https://github.com/ben-rogerson/twin.macro">
-              Twin.Macro
-            </StyledLink>
-          </li>
-        </ul>
+        <CitatContainer>
+          <thead>
+            <CitatHeader>Navn</CitatHeader>
+            <CitatHeader>Citat</CitatHeader>
+          </thead>
+          <tbody>{c}</tbody>
+        </CitatContainer>
       </Content>
     </Container>
   );
+}
+
+const query = `
+  query {
+    allCitater(_size: 100) {
+      data {
+        name
+        _id
+        citat
+      }
+    }
+  }
+`;
+
+export async function getStaticProps() {
+  try {
+    const data = await fetch("https://graphql.fauna.com/graphql", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${process.env.FAUNA_DB_SECRET}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query }),
+    });
+
+    const d = await data.json();
+    console.log(d);
+
+    const {
+      data: {
+        allCitater: { data: citater },
+      },
+    } = d;
+    console.log(citater);
+    return { props: { citater } };
+  } catch (error) {
+    console.log("error", error);
+  }
+  return { props: [] };
 }

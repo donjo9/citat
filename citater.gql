@@ -1,0 +1,5 @@
+type Citater {
+	id: number!
+	name: string!
+	citat: string!
+}
